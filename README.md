@@ -1,5 +1,7 @@
 # Dark Souls Asset Randomizer
 
+** NOTE: Do not use the download link on GitHub unless you only want the source code! Use [this link](https://drive.google.com/file/d/0B5Z4vOoakC78TkliRi15NWFpcVk/view?usp=sharing) to get the exe and the sound files.**
+
 This tool includes the Sound Inserter mod by /u/RavagerChris37 found [here](http://www.nexusmods.com/darksouls/mods/1193).
 
 What is it?

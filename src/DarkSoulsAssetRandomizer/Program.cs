@@ -80,16 +80,34 @@ namespace DarkSoulsAssetRandomizer
                 {
                     Directory.CreateDirectory(textureOutputFolder);
                 }
+
+                //clear sound inserter input folder, can cause problems if it stalls and doesnt clear itself
+                foreach (var item in Directory.GetFiles(soundModInputFolderPath))
+                {
+                    if (item != "fsblist.lst")
+                    {
+                        File.Delete(item);
+                    }                    
+                }
             }
             catch
             {
                 Console.WriteLine("Could not clear Output folders.");
-                Console.WriteLine("Manually delete the Output and Temp folders in /AssetRandomizerFiles/Sounds/ and /AssetRandomizerFiles/Textures/ and try again.");
+                Console.WriteLine("Manually empty the Output and Temp folders in /AssetRandomizerFiles/Sounds/ and /AssetRandomizerFiles/Textures/, as well as the INPUT folder in /AssetRandomizerFiles/MUSIC_MOD/ and try again.");
                 Console.ReadLine();
                 return;
             }
 
             Console.WriteLine("Looking at sound files.");
+
+            //Check that sound folders exist in case people try to run the download without them
+            if (Directory.GetDirectories(soundInputFolder).Count() == 0)
+            {
+                Console.WriteLine("No sound files detected! Did you download the file directly from GitHub? Check the instructions on GitHub for the download that contains the sound files.");
+                Console.ReadLine();
+                return;
+            }
+
             //Build a list of all sound files
             foreach (var folder in Directory.GetDirectories(soundInputFolder))
             {
