@@ -10,43 +10,103 @@ namespace DarkSoulsAssetRandomizer
 {
     class Program
     {
+        static string baseDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+        //Sound variables
+        static string[] soundFileExtensionsToReplace = { ".wav", ".mp3" };
+        static string soundInputFolder = baseDirectory + "/AssetRandomizerFiles/Sounds/Input/";
+        static string soundTempFolder = baseDirectory + "/AssetRandomizerFiles/Sounds/Temp/";
+        static string soundOutputFolder = baseDirectory + "/AssetRandomizerFiles/Sounds/Output/";
+        static int soundSmallFileThreshold = 70000;
+        static int soundMediumFileThreshold = 700000;
+        //sounds need to be seperated by size or game can refuse to load
+        static List<string> soundSmallFiles = new List<string>();
+        static List<string> soundMediumFiles = new List<string>();
+        static List<string> soundLargeFiles = new List<string>();
+
+        static int numberOfSounds = 0;
+
+        static string soundModInputFolderPath = baseDirectory + "/AssetRandomizerFiles/MUSIC_MOD/INPUT/";
+        static string soundModOutputFolderPath = baseDirectory + "/AssetRandomizerFiles/MUSIC_MOD/OUTPUT/";
+        static string soundModBatchFile = baseDirectory + "/AssetRandomizerFiles/MUSIC_MOD/DSSI.bat";
+
+        //Texture variables
+        static string[] textureFileExtensionsToReplace = { ".png", ".dds", ".jpg", ".tga" };
+        static string textureInputFolder = baseDirectory + "/AssetRandomizerFiles/Textures/Input/";
+        static string textureTempFolder = baseDirectory + "/AssetRandomizerFiles/Textures/Temp/";
+        static string textureOutputFolder = baseDirectory + "/AssetRandomizerFiles/Textures/Output/";
+        static List<string> textureFiles = new List<string>();
+
+        static int numberOfTextures = 0;
+
+        static string mainSoundFileInputLocation = baseDirectory + "/AssetRandomizerFiles/Sounds/Input/fsb.frpg_main/";
+        static string mainSoundFileOutputLocation = baseDirectory + "/AssetRandomizerFiles/Sounds/Output/frpg_main.fsb";
+
+        static int minMainSoundFileSize = 5500000;
+        static int maxMainSoundFileSize = 8400000;
+
         static void Main(string[] args)
         {
-            string baseDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            Console.WriteLine("Select an option:");
+            Console.WriteLine("1 - Randomize Sounds and Textures");
+            Console.WriteLine("2 - Randomize Sounds");
+            Console.WriteLine("3 - Randomize Textures");
+            Console.WriteLine("4 - Redo Main Sound File (troubleshooting)");
+            string selection = Console.ReadLine();            
 
-            //Sound variables
-            string[] soundFileExtensionsToReplace = { ".wav", ".mp3" };
-            string soundInputFolder = baseDirectory + "/AssetRandomizerFiles/Sounds/Input/";
-            string soundTempFolder = baseDirectory + "/AssetRandomizerFiles/Sounds/Temp/";
-            string soundOutputFolder = baseDirectory + "/AssetRandomizerFiles/Sounds/Output/";
-            int soundSmallFileThreshold = 70000;
-            int soundMediumFileThreshold = 700000;
-            //sounds need to be seperated by size or game can refuse to load
-            List<string> soundSmallFiles = new List<string>();
-            List<string> soundMediumFiles = new List<string>();
-            List<string> soundLargeFiles = new List<string>();
+            if (selection == "1")
+            {
+                EmptyTempFolders();
+                RandomizeSound();
+                FixMainSoundFile();
+                RandomizeTextures();
+            }
+            else if (selection == "2")
+            {
+                EmptyTempFolders();
+                RandomizeSound();
+                FixMainSoundFile();
+            }
+            else if (selection == "3")
+            {
+                EmptyTempFolders();
+                RandomizeTextures();
+            }
+            else if (selection == "4")
+            {
+                EmptyTempFolders();
+                FixMainSoundFile();
+            }
+            else
+            {
+                return;
+            }
 
-            int numberOfSounds = 0;
+            //cleanup
+            try
+            {
+                //Delete temp folders
+                if (Directory.Exists(soundTempFolder))
+                {
+                    Directory.Delete(soundTempFolder, true);
+                }
 
-            string soundModInputFolderPath = baseDirectory + "/AssetRandomizerFiles/MUSIC_MOD/INPUT/";
-            string soundModOutputFolderPath = baseDirectory + "/AssetRandomizerFiles/MUSIC_MOD/OUTPUT/";
-            string soundModBatchFile = baseDirectory + "/AssetRandomizerFiles/MUSIC_MOD/DSSI.bat";
+                if (Directory.Exists(textureTempFolder))
+                {
+                    Directory.Delete(textureTempFolder, true);
+                }
+            }
+            catch { }
 
-            //Texture variables
-            string[] textureFileExtensionsToReplace = { ".png", ".dds", ".jpg", ".tga" };
-            string textureInputFolder = baseDirectory + "/AssetRandomizerFiles/Textures/Input/";
-            string textureTempFolder = baseDirectory + "/AssetRandomizerFiles/Textures/Temp/";
-            string textureOutputFolder = baseDirectory + "/AssetRandomizerFiles/Textures/Output/";
-            List<string> textureFiles = new List<string>();
+            //Add some empty lines so the complete message stands out more
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine("Randomizing complete!");
+            Console.ReadLine();
+        }
 
-            int numberOfTextures = 0;
-
-            string mainSoundFileInputLocation = baseDirectory + "/AssetRandomizerFiles/Sounds/Input/fsb.frpg_main/";
-            string mainSoundFileOutputLocation = baseDirectory + "/AssetRandomizerFiles/Sounds/Output/frpg_main.fsb";
-
-            int minMainSoundFileSize = 5500000;
-            int maxMainSoundFileSize = 8200000;
-
+        static void EmptyTempFolders()
+        {
             Console.WriteLine("Clearing Output folders.");
 
             try
@@ -87,7 +147,7 @@ namespace DarkSoulsAssetRandomizer
                     if (item != "fsblist.lst")
                     {
                         File.Delete(item);
-                    }                    
+                    }
                 }
             }
             catch
@@ -97,10 +157,13 @@ namespace DarkSoulsAssetRandomizer
                 Console.ReadLine();
                 return;
             }
+        }
 
+        static void RandomizeSound()
+        {
             Console.WriteLine("Looking at sound files.");
 
-            //Check that sound folders exist in case people try to run the download without them
+            //Check that sound folders exist in case people are using the download that doesnt come with sound files
             if (Directory.GetDirectories(soundInputFolder).Count() == 0)
             {
                 Console.WriteLine("No sound files detected! Did you download the file directly from GitHub? Check the instructions on GitHub for the download that contains the sound files.");
@@ -257,143 +320,10 @@ namespace DarkSoulsAssetRandomizer
                 File.Copy(file, file.Replace(soundModOutputFolderPath, soundOutputFolder));
                 File.Delete(file);
             }
+        }
 
-            Console.WriteLine("Checking main sound file.");
-
-            bool isMainFileValid = false;
-
-            while (!isMainFileValid)
-            {
-                if (Directory.Exists(soundTempFolder))
-                {
-                    Directory.Delete(soundTempFolder, true);
-                }
-
-                Directory.CreateDirectory(mainSoundFileInputLocation.Replace(soundInputFolder, soundTempFolder));
-
-                //Build a list of all sound files
-                foreach (var folder in Directory.GetDirectories(soundInputFolder))
-                {
-                    foreach (var file in Directory.GetFiles(folder))
-                    {
-                        string fileName = Path.GetFileName(file);
-                        string thisFolder = folder.Replace(soundInputFolder, "");
-
-                        //Check this is a sound file
-                        if (soundFileExtensionsToReplace.Any(fileName.EndsWith) && !fileName.Contains("blank"))
-                        {
-                            long length = new FileInfo(file).Length;
-
-                            if (length < soundSmallFileThreshold)
-                            {
-                                soundSmallFiles.Add(thisFolder + "/" + fileName);
-                            }
-                            else if (length < soundMediumFileThreshold)
-                            {
-                                soundMediumFiles.Add(thisFolder + "/" + fileName);
-                            }
-                            else
-                            {
-                                soundLargeFiles.Add(thisFolder + "/" + fileName);
-                            }
-                        }
-                    }
-                }
-
-                foreach (var file in Directory.GetFiles(mainSoundFileInputLocation))
-                {
-                    string fileName = Path.GetFileName(file);
-
-                    //Check this is a sound file
-                    if (soundFileExtensionsToReplace.Any(fileName.EndsWith) && !fileName.Contains("blank"))
-                    {
-                        //Pick a random sound file name of the right size and copy
-                        long length = new FileInfo(file).Length;
-                        Random r = new Random();
-
-                        int i = r.Next(soundSmallFiles.Count);
-
-                        File.Copy(soundInputFolder + soundSmallFiles[i], file.Replace(soundInputFolder, soundTempFolder), true);
-                        soundSmallFiles.RemoveAt(i);
-                    }
-                    else
-                    {
-                        File.Copy(file, file.Replace(soundInputFolder, soundTempFolder), true);
-                    }
-                }
-
-                Console.WriteLine("Running batch file");
-                foreach (var folder in Directory.GetDirectories(soundTempFolder))
-                {
-                    var files = Directory.GetFiles(folder);
-
-                    foreach (var file in Directory.GetFiles(folder))
-                    {
-                        string fileName = Path.GetFileName(file);
-
-                        File.Copy(file, soundModInputFolderPath + fileName, true);
-                    }
-
-                    //Run the sound inserter batch file
-                    System.Threading.Thread.Sleep(2000);
-                    var processInfo = new ProcessStartInfo(soundModBatchFile);
-                    processInfo.CreateNoWindow = true;
-                    processInfo.UseShellExecute = false;
-                    processInfo.WorkingDirectory = baseDirectory + "/AssetRandomizerFiles/MUSIC_MOD/";
-                    processInfo.RedirectStandardError = true;
-                    processInfo.RedirectStandardOutput = true;
-
-                    var process = Process.Start(processInfo);
-
-                    process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
-                        Console.WriteLine("output>>" + e.Data);
-                    process.BeginOutputReadLine();
-
-                    process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
-                        Console.WriteLine("error>>" + e.Data);
-                    process.BeginErrorReadLine();
-
-                    process.WaitForExit();
-
-                    Console.WriteLine("ExitCode: {0}", process.ExitCode);
-                    process.Close();
-
-                    //wait a short time or else batch file will give an error sometimes
-                    System.Threading.Thread.Sleep(5000);
-
-                    //clear files from input folder for next
-                    foreach (var file in files)
-                    {
-                        string fileName = Path.GetFileName(file);
-
-                        if (File.Exists(soundModInputFolderPath + fileName))
-                        {
-                            File.Delete(soundModInputFolderPath + fileName);
-                        }
-                    }
-                }
-
-                //Move files from sound mod output directory and delete them
-                foreach (var file in Directory.GetFiles(soundModOutputFolderPath))
-                {
-                    File.Copy(file, file.Replace(soundModOutputFolderPath, soundOutputFolder), true);
-                    File.Delete(file);
-                }
-
-                long mainFileSize = new FileInfo(mainSoundFileOutputLocation).Length;
-                if (mainFileSize > minMainSoundFileSize && mainFileSize < maxMainSoundFileSize)
-                {
-                    isMainFileValid = true;
-                }
-                else
-                {
-                    Console.WriteLine("Main sound file is invalid, re-randomizing.");
-                }
-            }
-
-            Console.WriteLine("Main sound file OK.");
-
-            //Texture randomizer
+        static void RandomizeTextures()
+        {
             Console.WriteLine("Looking at texture files.");
 
             //Build a list of file names
@@ -403,7 +333,6 @@ namespace DarkSoulsAssetRandomizer
 
                 foreach (var file in Directory.GetFiles(folder))
                 {
-                    //var fileName = file.Substring();
                     string fileName = Path.GetFileName(file);
 
                     if (textureFileExtensionsToReplace.Any(fileName.EndsWith))
@@ -415,7 +344,7 @@ namespace DarkSoulsAssetRandomizer
             }
 
             numberOfTextures = textureFiles.Count;
-            counter = 1;
+            int counter = 1;
 
             foreach (var folder in Directory.GetDirectories(textureInputFolder))
             {
@@ -443,33 +372,138 @@ namespace DarkSoulsAssetRandomizer
                     File.Copy(file, textureOutputFolder + Path.GetFileNameWithoutExtension(file) + ".png");
                 }
             }
+        }
 
-            try
+        static void FixMainSoundFile()
+        {
+            Console.WriteLine("Checking main sound file.");
+
+            bool isMainFileValid = false;
+
+            if (File.Exists(mainSoundFileOutputLocation))
             {
-                //Delete temp folders
-                if (Directory.Exists(soundTempFolder))
+                long mainFileSize = new FileInfo(mainSoundFileOutputLocation).Length;
+                if (mainFileSize > minMainSoundFileSize && mainFileSize < maxMainSoundFileSize)
                 {
-                    Directory.Delete(soundTempFolder, true);
+                    isMainFileValid = true;
                 }
-
-                if (Directory.Exists(textureTempFolder))
+                else
                 {
-                    Directory.Delete(textureTempFolder, true);
+                    Console.WriteLine("Main sound file is invalid, re-randomizing.");
                 }
             }
-            catch { }
 
-            //Add some empty lines so the complete message stands out more
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine("Randomizing complete!");
-            Console.ReadLine();
+            while (!isMainFileValid)
+            {
+                //Build a list of all sound files
+                foreach (var folder in Directory.GetDirectories(soundInputFolder))
+                {
+                    foreach (var file in Directory.GetFiles(folder))
+                    {
+                        string fileName = Path.GetFileName(file);
+                        string thisFolder = folder.Replace(soundInputFolder, "");
 
-            //I should probably get rid of this before I release this lol
-            Console.WriteLine("hi every1 im new!!!!!!! holds up spork my name is katy but u can call me t3h PeNgU1N oF d00m!!!!!!!! lol…as u can see im very random!!!! thats why i came here, 2 meet random ppl like me _… im 13 years old (im mature 4 my age tho!!) i like 2 watch invader zim w/ my girlfreind (im bi if u dont like it deal w/it) its our favorite tv show!!! bcuz its SOOOO random!!!! shes random 2 of course but i want 2 meet more random ppl =) like they say the more the merrier!!!! lol…neways i hope 2 make alot of freinds here so give me lots of commentses!!!! DOOOOOMMMM!!!!!!!!!!!!!!!! <--- me bein random again _^ hehe…toodles!!!!!");
-            Console.WriteLine("love and waffles,");
-            Console.WriteLine("t3h PeNgU1N oF d00m");
-            Console.ReadLine();
+                        //Check this is a sound file
+                        if (soundFileExtensionsToReplace.Any(fileName.EndsWith) && !fileName.Contains("blank"))
+                        {
+                            long length = new FileInfo(file).Length;
+
+                            //Decrease lower file size limit for main file due to the number of sounds
+                            if (length < (soundSmallFileThreshold - 5000))
+                            {
+                                soundSmallFiles.Add(thisFolder + "/" + fileName);
+                            }
+                            else if (length < soundMediumFileThreshold)
+                            {
+                                soundMediumFiles.Add(thisFolder + "/" + fileName);
+                            }
+                            else
+                            {
+                                soundLargeFiles.Add(thisFolder + "/" + fileName);
+                            }
+                        }
+                    }
+                }
+
+                foreach (var file in Directory.GetFiles(mainSoundFileInputLocation))
+                {
+                    string fileName = Path.GetFileName(file);
+
+                    //Check this is a sound file
+                    if (soundFileExtensionsToReplace.Any(fileName.EndsWith) && !fileName.Contains("blank"))
+                    {
+                        //Pick a random sound file name of the right size and copy
+                        Random r = new Random();
+                        int i = r.Next(soundSmallFiles.Count);
+
+                        File.Copy(soundInputFolder + soundSmallFiles[i], soundModInputFolderPath + fileName, true);
+                        soundSmallFiles.RemoveAt(i);
+                    }
+                    else
+                    {
+                        File.Copy(file, soundModInputFolderPath + fileName, true);
+                    }
+                }
+
+                Console.WriteLine("Running batch file");
+
+                //Run the sound inserter batch file
+                System.Threading.Thread.Sleep(2000);
+                var processInfo = new ProcessStartInfo(soundModBatchFile);
+                processInfo.CreateNoWindow = true;
+                processInfo.UseShellExecute = false;
+                processInfo.WorkingDirectory = baseDirectory + "/AssetRandomizerFiles/MUSIC_MOD/";
+                processInfo.RedirectStandardError = true;
+                processInfo.RedirectStandardOutput = true;
+
+                var process = Process.Start(processInfo);
+
+                process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
+                    Console.WriteLine("output>>" + e.Data);
+                process.BeginOutputReadLine();
+
+                process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
+                    Console.WriteLine("error>>" + e.Data);
+                process.BeginErrorReadLine();
+
+                process.WaitForExit();
+
+                Console.WriteLine("ExitCode: {0}", process.ExitCode);
+                process.Close();
+
+                //wait a short time or else batch file will give an error sometimes
+                System.Threading.Thread.Sleep(5000);
+
+                //clear files from input folder for next
+                foreach (var item in Directory.GetFiles(soundModInputFolderPath))
+                {
+                    if (item != "fsblist.lst")
+                    {
+                        File.Delete(item);
+                    }
+                }              
+
+                //Check file size is valid
+                long mainFileSize = new FileInfo(mainSoundFileOutputLocation.Replace(soundOutputFolder, soundModOutputFolderPath)).Length;
+                if (mainFileSize > minMainSoundFileSize && mainFileSize < maxMainSoundFileSize)
+                {
+                    isMainFileValid = true;
+                }
+                else
+                {
+                    Console.WriteLine("Main sound file is invalid, re-randomizing.");
+                }
+            }
+
+            //Move files from sound mod output directory and delete them
+            foreach (var file in Directory.GetFiles(soundModOutputFolderPath))
+            {
+                File.Copy(file, file.Replace(soundModOutputFolderPath, soundOutputFolder), true);
+                File.Delete(file);
+            }
+
+            Console.WriteLine("Main sound file OK.");
         }
+
     }
 }
