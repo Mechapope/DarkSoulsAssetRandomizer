@@ -52,6 +52,8 @@ namespace DarkSoulsAssetRandomizer
             Console.WriteLine("2 - Randomize Sounds");
             Console.WriteLine("3 - Randomize Textures");
             Console.WriteLine("4 - Redo Main Sound File (troubleshooting)");
+            Console.WriteLine("5 - Use Extra files for ALL sounds");
+            Console.WriteLine("6 - Use Extra files for ALL textures");
             string selection = Console.ReadLine();            
 
             if (selection == "1")
@@ -76,6 +78,16 @@ namespace DarkSoulsAssetRandomizer
             {
                 EmptyTempFolders();
                 FixMainSoundFile();
+            }
+            else if (selection == "5")
+            {
+                EmptyTempFolders();
+                ReplaceAllSoundsWithExtra();
+            }
+            else if (selection == "6")
+            {
+                EmptyTempFolders();
+                ReplaceAllTexturesWithExtra();
             }
             else
             {
@@ -228,26 +240,26 @@ namespace DarkSoulsAssetRandomizer
                         {
                             int i = r.Next(soundSmallFiles.Count);
 
-                            File.Copy(file, soundTempFolder + soundSmallFiles[i]);
+                            File.Copy(file, soundTempFolder + soundSmallFiles[i], true);
                             soundSmallFiles.RemoveAt(i);
                         }
                         else if (length < soundMediumFileThreshold)
                         {
                             int i = r.Next(soundMediumFiles.Count);
-                            File.Copy(file, soundTempFolder + soundMediumFiles[i]);
+                            File.Copy(file, soundTempFolder + soundMediumFiles[i], true);
                             soundMediumFiles.RemoveAt(i);
                         }
                         else
                         {
                             //Not a sound file, copy as is to output folder
                             int i = r.Next(soundLargeFiles.Count);
-                            File.Copy(file, soundTempFolder + soundLargeFiles[i]);
+                            File.Copy(file, soundTempFolder + soundLargeFiles[i], true);
                             soundLargeFiles.RemoveAt(i);
                         }
                     }
                     else
                     {
-                        File.Copy(file, file.Replace(soundInputFolder, soundTempFolder));
+                        File.Copy(file, file.Replace(soundInputFolder, soundTempFolder), true);
                     }
                 }
             }
@@ -317,7 +329,7 @@ namespace DarkSoulsAssetRandomizer
             //Move files from sound mod output directory and delete them
             foreach (var file in Directory.GetFiles(soundModOutputFolderPath))
             {
-                File.Copy(file, file.Replace(soundModOutputFolderPath, soundOutputFolder));
+                File.Copy(file, file.Replace(soundModOutputFolderPath, soundOutputFolder), true);
                 File.Delete(file);
             }
         }
@@ -359,7 +371,7 @@ namespace DarkSoulsAssetRandomizer
                         Random r = new Random();
                         int i = r.Next(textureFiles.Count);
 
-                        File.Copy(file, textureTempFolder + textureFiles[i]);
+                        File.Copy(file, textureTempFolder + textureFiles[i], true);
                         textureFiles.RemoveAt(i);
                     }
                 }
@@ -367,10 +379,8 @@ namespace DarkSoulsAssetRandomizer
 
             foreach (var file in Directory.GetFiles(textureTempFolder + "Textures"))
             {
-                if (!File.Exists(textureOutputFolder + Path.GetFileNameWithoutExtension(file) + ".png"))
-                {
-                    File.Copy(file, textureOutputFolder + Path.GetFileNameWithoutExtension(file) + ".png");
-                }
+                //Change file extensions to png (is this necessary even?)
+                File.Copy(file, textureOutputFolder + Path.GetFileNameWithoutExtension(file) + ".png", true);                
             }
         }
 
@@ -503,6 +513,113 @@ namespace DarkSoulsAssetRandomizer
             }
 
             Console.WriteLine("Main sound file OK.");
+        }
+
+        static void ReplaceAllSoundsWithExtra()
+        {
+            //Get list of replacing files
+            string[] replacingFiles = Directory.GetFiles(soundInputFolder + "_Extra/").Where(a => soundFileExtensionsToReplace.Any(a.EndsWith)).ToArray();
+            int counter = 1;
+            Random r = new Random();
+
+            foreach (var folder in Directory.GetDirectories(soundInputFolder))
+            {
+                if (!folder.EndsWith("_Extra"))
+                {
+                    var files = Directory.GetFiles(folder);
+
+                    foreach (var file in files)
+                    {
+                        string fileName = Path.GetFileName(file);
+
+                        //Check this is a sound file
+                        if (soundFileExtensionsToReplace.Any(fileName.EndsWith))
+                        {
+                            string replacingFile = replacingFiles[r.Next(replacingFiles.Length)];
+                            //copy random file to folder
+                            File.Copy(replacingFile, soundModInputFolderPath + fileName, true);
+                        }
+                        else
+                        {
+                            File.Copy(file, soundModInputFolderPath + fileName, true);
+                        }
+                    }
+
+                    //Run batch file
+                    System.Threading.Thread.Sleep(2000);
+                    var processInfo = new ProcessStartInfo(soundModBatchFile);
+                    processInfo.CreateNoWindow = true;
+                    processInfo.UseShellExecute = false;
+                    processInfo.WorkingDirectory = baseDirectory + "/AssetRandomizerFiles/MUSIC_MOD/";
+                    processInfo.RedirectStandardError = true;
+                    processInfo.RedirectStandardOutput = true;
+
+                    var process = Process.Start(processInfo);
+
+                    process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
+                        Console.WriteLine("output>>" + e.Data);
+                    process.BeginOutputReadLine();
+
+                    process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
+                        Console.WriteLine("error>>" + e.Data);
+                    process.BeginErrorReadLine();
+
+                    process.WaitForExit();
+
+                    Console.WriteLine("ExitCode: {0}", process.ExitCode);
+                    process.Close();
+                    System.Threading.Thread.Sleep(5000);
+
+                    Console.WriteLine("Completed file " + counter + " of " + (Directory.GetDirectories(soundInputFolder).Count() -1));
+                    counter++;
+
+                    //clear files from mod input folder
+                    foreach (var file in files)
+                    {
+                        string fileName = Path.GetFileName(file);
+
+                        if (File.Exists(soundModInputFolderPath + fileName))
+                        {
+                            File.Delete(soundModInputFolderPath + fileName);
+                        }
+                    }
+                }
+            }
+
+            //Move files from sound mod output directory and delete them
+            foreach (var file in Directory.GetFiles(soundModOutputFolderPath))
+            {
+                File.Copy(file, file.Replace(soundModOutputFolderPath, soundOutputFolder), true);
+                File.Delete(file);
+            }
+
+        }
+
+        static void ReplaceAllTexturesWithExtra()
+        {
+            //Get list of replacing files
+            string[] replacingFiles = Directory.GetFiles(textureInputFolder + "_Extra/").Where(a => textureFileExtensionsToReplace.Any(a.EndsWith)).ToArray();
+            int counter = 1;
+            Random r = new Random();
+
+            foreach (var file in Directory.GetFiles(textureInputFolder + "Textures/"))
+            {
+                string fileName = Path.GetFileName(file);
+
+                if (textureFileExtensionsToReplace.Any(fileName.EndsWith))
+                {
+                    string replacingFile = replacingFiles[r.Next(replacingFiles.Length)];
+                    //copy random file to folder
+                    File.Copy(replacingFile, textureOutputFolder + fileName, true);
+                }
+                else
+                {
+                    File.Copy(file, textureOutputFolder + fileName, true);
+                }
+            }
+
+            Console.WriteLine("Completed file " + counter + " of " + Directory.GetFiles(textureInputFolder + "Textures/").Count());
+            counter++;
         }
 
     }
