@@ -35,6 +35,13 @@ namespace DarkSoulsAssetRandomizer
         static string textureInputFolder = baseDirectory + "/AssetRandomizerFiles/Textures/Input/";
         static string textureTempFolder = baseDirectory + "/AssetRandomizerFiles/Textures/Temp/";
         static string textureOutputFolder = baseDirectory + "/AssetRandomizerFiles/Textures/Output/";
+        static string[] uiTextures = {  "d39537ab.tga",
+                                        "db8a58fa.tga",
+                                        "f9d8db89.tga",
+                                        "6b0e84c1.tga",
+                                        "e3e2582d.tga"
+                                    };
+
         static List<string> textureFiles = new List<string>();
 
         static int numberOfTextures = 0;
@@ -54,14 +61,26 @@ namespace DarkSoulsAssetRandomizer
             Console.WriteLine("4 - Redo Main Sound File (troubleshooting)");
             Console.WriteLine("5 - Use Extra files for ALL sounds");
             Console.WriteLine("6 - Use Extra files for ALL textures");
-            string selection = Console.ReadLine();            
+            string selection = Console.ReadLine();
+
+            bool randomizeUiTextures = false;
+            
+            if (selection == "1" || selection == "3" || selection == "6")
+            {
+                Console.WriteLine("Do you want to randomize the UI textures? If you do, you wont be able to read a damn thing. (Y/N)");
+                string userInput = Console.ReadLine();
+                if (userInput.ToUpper().StartsWith("Y"))
+                {
+                    randomizeUiTextures = true;
+                }
+            }           
 
             if (selection == "1")
             {
                 EmptyTempFolders();
                 RandomizeSound();
                 FixMainSoundFile();
-                RandomizeTextures();
+                RandomizeTextures(randomizeUiTextures);
             }
             else if (selection == "2")
             {
@@ -72,7 +91,7 @@ namespace DarkSoulsAssetRandomizer
             else if (selection == "3")
             {
                 EmptyTempFolders();
-                RandomizeTextures();
+                RandomizeTextures(randomizeUiTextures);
             }
             else if (selection == "4")
             {
@@ -87,7 +106,7 @@ namespace DarkSoulsAssetRandomizer
             else if (selection == "6")
             {
                 EmptyTempFolders();
-                ReplaceAllTexturesWithExtra();
+                ReplaceAllTexturesWithExtra(randomizeUiTextures);
             }
             else
             {
@@ -334,7 +353,7 @@ namespace DarkSoulsAssetRandomizer
             }
         }
 
-        static void RandomizeTextures()
+        static void RandomizeTextures(bool randomizeUiTextures)
         {
             Console.WriteLine("Looking at texture files.");
 
@@ -347,7 +366,7 @@ namespace DarkSoulsAssetRandomizer
                 {
                     string fileName = Path.GetFileName(file);
 
-                    if (textureFileExtensionsToReplace.Any(fileName.EndsWith))
+                    if (textureFileExtensionsToReplace.Any(fileName.EndsWith) && (randomizeUiTextures || !uiTextures.Contains(fileName)))
                     {
                         //copy other file to folder
                         textureFiles.Add(file.Replace(textureInputFolder, ""));
@@ -364,7 +383,12 @@ namespace DarkSoulsAssetRandomizer
 
                 foreach (var file in files)
                 {
-                    if (textureFileExtensionsToReplace.Any(file.EndsWith))
+                    //Check if we want to copy the ui files
+                    if (!randomizeUiTextures && uiTextures.Contains(Path.GetFileName(file)))
+                    {
+                        File.Copy(file, file.Replace(textureInputFolder, textureTempFolder), true);
+                    }
+                    else if (textureFileExtensionsToReplace.Any(file.EndsWith))
                     {
                         Console.WriteLine("Randomizing texture " + counter + " of " + numberOfTextures + ".");
                         counter++;
@@ -377,10 +401,10 @@ namespace DarkSoulsAssetRandomizer
                 }
             }
 
+            Console.WriteLine("Copying to Output folder.");
             foreach (var file in Directory.GetFiles(textureTempFolder + "Textures"))
             {
-                //Change file extensions to png (is this necessary even?)
-                File.Copy(file, textureOutputFolder + Path.GetFileNameWithoutExtension(file) + ".png", true);                
+                File.Copy(file, textureOutputFolder + Path.GetFileName(file), true);                
             }
         }
 
@@ -491,7 +515,7 @@ namespace DarkSoulsAssetRandomizer
                     {
                         File.Delete(item);
                     }
-                }              
+                }
 
                 //Check file size is valid
                 long mainFileSize = new FileInfo(mainSoundFileOutputLocation.Replace(soundOutputFolder, soundModOutputFolderPath)).Length;
@@ -586,6 +610,8 @@ namespace DarkSoulsAssetRandomizer
                 }
             }
 
+            Console.WriteLine("Copying files to Output folder.");
+
             //Move files from sound mod output directory and delete them
             foreach (var file in Directory.GetFiles(soundModOutputFolderPath))
             {
@@ -593,9 +619,30 @@ namespace DarkSoulsAssetRandomizer
                 File.Delete(file);
             }
 
+            long length = new FileInfo(mainSoundFileOutputLocation).Length;
+
+            if (length > maxMainSoundFileSize || length < minMainSoundFileSize)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Warning: frpg_main.fsb is larger than the game can support and will probably cause the game to not load.");
+                Console.WriteLine();
+                Console.WriteLine("Do you want to copy this file to the Output folder anyway? (Y/N)");
+
+                string userInput = Console.ReadLine();
+
+                if (userInput.ToUpper().StartsWith("N"))
+                {
+                    File.Delete(mainSoundFileOutputLocation);
+                }
+                else
+                {
+                    Console.WriteLine("Try deleting the frpg_main.fsb file if your game fails to load.");
+                }
+            }
+
         }
 
-        static void ReplaceAllTexturesWithExtra()
+        static void ReplaceAllTexturesWithExtra(bool randomizeUiTextures)
         {
             //Get list of replacing files
             string[] replacingFiles = Directory.GetFiles(textureInputFolder + "_Extra/").Where(a => textureFileExtensionsToReplace.Any(a.EndsWith)).ToArray();
@@ -606,6 +653,10 @@ namespace DarkSoulsAssetRandomizer
             {
                 string fileName = Path.GetFileName(file);
 
+                if (!randomizeUiTextures && uiTextures.Contains(Path.GetFileName(file)))
+                {
+                    File.Copy(file, textureOutputFolder + fileName, true);
+                }
                 if (textureFileExtensionsToReplace.Any(fileName.EndsWith))
                 {
                     string replacingFile = replacingFiles[r.Next(replacingFiles.Length)];
