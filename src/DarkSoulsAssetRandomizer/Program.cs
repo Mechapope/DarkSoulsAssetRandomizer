@@ -641,17 +641,100 @@ namespace DarkSoulsAssetRandomizer
                 Console.WriteLine();
                 Console.WriteLine("Warning: frpg_main.fsb is larger than the game can support and will probably cause the game to not load.");
                 Console.WriteLine();
-                Console.WriteLine("Do you want to copy this file to the Output folder anyway? (Y/N)");
+                Console.WriteLine("Do you want to try re-randomizing it, skipping files that are too small? (Y/N)");
 
                 string userInput = Console.ReadLine();
 
                 if (userInput.ToUpper().StartsWith("N"))
                 {
-                    File.Delete(mainSoundFileOutputLocation);
+                    Console.WriteLine("Do you want to copy this file to the Output folder anyway? (Y/N)");
+
+                    userInput = Console.ReadLine();
+
+                    if (userInput.ToUpper().StartsWith("N"))
+                    {
+                        File.Delete(mainSoundFileOutputLocation);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Try deleting the frpg_main.fsb file if your game fails to load.");
+                    }
                 }
                 else
                 {
-                    Console.WriteLine("Try deleting the frpg_main.fsb file if your game fails to load.");
+                    //Recreate sound folder
+                    foreach (var file in Directory.GetFiles(mainSoundFileInputLocation))
+                    {
+                        string fileName = Path.GetFileName(file);
+
+                        //Check this is a sound file
+                        if (soundFileExtensionsToReplace.Any(fileName.EndsWith) && !fileName.Contains("blank"))
+                        {
+                            long fileSize = new FileInfo(file).Length;
+
+                            List<string> possibleSoundFiles = new List<string>();
+
+                            //Get replacement sounds that are smaller than the file to replace
+                            foreach (var extraFile in Directory.GetFiles(soundInputFolder + "_Extra/"))
+                            {
+                                if (new FileInfo(extraFile).Length < fileSize)
+                                {
+                                    possibleSoundFiles.Add(extraFile);
+                                }                                
+                            }                       
+                            
+                            //Copy one of the smaller files if there are any, otherwise just copy the original sound
+                            if (possibleSoundFiles.Count > 0)
+                            {
+                                int i = r.Next(possibleSoundFiles.Count);
+                                File.Copy(possibleSoundFiles[i], soundModInputFolderPath + fileName, true);
+                            }
+                            else
+                            {
+                                File.Copy(file, soundModInputFolderPath + fileName, true);
+                            }                           
+                        }
+                        else
+                        {
+                            File.Copy(file, soundModInputFolderPath + fileName, true);
+                        }
+                    }
+
+                    Console.WriteLine("Running batch file");
+
+                    //Run the sound inserter batch file
+                    System.Threading.Thread.Sleep(2000);
+                    var processInfo = new ProcessStartInfo(soundModBatchFile);
+                    processInfo.CreateNoWindow = true;
+                    processInfo.UseShellExecute = false;
+                    processInfo.WorkingDirectory = baseDirectory + "/AssetRandomizerFiles/MUSIC_MOD/";
+                    processInfo.RedirectStandardError = true;
+                    processInfo.RedirectStandardOutput = true;
+
+                    var process = Process.Start(processInfo);
+
+                    process.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
+                        Console.WriteLine("output>>" + e.Data);
+                    process.BeginOutputReadLine();
+
+                    process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) =>
+                        Console.WriteLine("error>>" + e.Data);
+                    process.BeginErrorReadLine();
+
+                    process.WaitForExit();
+
+                    Console.WriteLine("ExitCode: {0}", process.ExitCode);
+                    process.Close();
+
+                    //wait a short time or else batch file will give an error sometimes
+                    System.Threading.Thread.Sleep(5000);
+
+                    foreach (var file in Directory.GetFiles(soundModOutputFolderPath))
+                    {
+                        File.Copy(file, file.Replace(soundModOutputFolderPath, soundOutputFolder), true);
+                        File.Delete(file);
+                    }
+
                 }
             }
 
@@ -675,7 +758,7 @@ namespace DarkSoulsAssetRandomizer
                 }
                 else if (textureFileExtensionsToReplace.Any(fileName.EndsWith))
                 {
-                    //get a random file to replace with
+                    //get a random file from extra folder to replace with
                     string replacingFile = replacingFiles[r.Next(replacingFiles.Length)];                    
 
                     //dont change file extension if dds, otherwise change to png so dsfix can use it 

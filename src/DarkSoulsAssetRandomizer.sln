@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarkSoulsAssetRandomizer", "DarkSoulsAssetRandomizer\DarkSoulsAssetRandomizer.csproj", "{7AC6FA6D-C799-44E5-8A74-9CB63122B386}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DarkSoulsAssetRandomizer", "DarkSoulsAssetRandomizer\DarkSoulsAssetRandomizer.csproj", "{D372DC91-A50B-4363-9641-95ABDA7EB8F3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7AC6FA6D-C799-44E5-8A74-9CB63122B386}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7AC6FA6D-C799-44E5-8A74-9CB63122B386}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7AC6FA6D-C799-44E5-8A74-9CB63122B386}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7AC6FA6D-C799-44E5-8A74-9CB63122B386}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D372DC91-A50B-4363-9641-95ABDA7EB8F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D372DC91-A50B-4363-9641-95ABDA7EB8F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D372DC91-A50B-4363-9641-95ABDA7EB8F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D372DC91-A50B-4363-9641-95ABDA7EB8F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
