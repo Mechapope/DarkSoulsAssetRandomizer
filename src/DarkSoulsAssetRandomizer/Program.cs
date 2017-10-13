@@ -35,11 +35,18 @@ namespace DarkSoulsAssetRandomizer
         static string textureInputFolder = baseDirectory + "/AssetRandomizerFiles/Textures/Input/";
         static string textureTempFolder = baseDirectory + "/AssetRandomizerFiles/Textures/Temp/";
         static string textureOutputFolder = baseDirectory + "/AssetRandomizerFiles/Textures/Output/";
-        static string[] uiTextures = {  "d39537ab.tga",
+        static string[] uiTextures = {  "6b0e84c1.tga",
+                                        "9ed39127.tga",
+                                        "c3a15a4c.tga",
                                         "db8a58fa.tga",
                                         "f9d8db89.tga",
-                                        "6b0e84c1.tga",
-                                        "e3e2582d.tga"
+                                        "e3e2582d.tga",
+                                        "6b0e84c1.dds",
+                                        "9ed39127.dds",
+                                        "c3a15a4c.dds",
+                                        "db8a58fa.dds",
+                                        "f9d8db89.dds",
+                                        "e3e2582d.dds"
                                     };
 
         static List<string> textureFiles = new List<string>();
@@ -404,7 +411,15 @@ namespace DarkSoulsAssetRandomizer
             Console.WriteLine("Copying to Output folder.");
             foreach (var file in Directory.GetFiles(textureTempFolder + "Textures"))
             {
-                File.Copy(file, textureOutputFolder + Path.GetFileName(file), true);                
+                //dont change file extension if dds, otherwise change to png so dsfix can use it 
+                if (Path.GetExtension(file) == ".dds")
+                {
+                    File.Copy(file, textureOutputFolder + Path.GetFileName(file), true);
+                }  
+                else
+                {
+                    File.Copy(file, textureOutputFolder + Path.GetFileNameWithoutExtension(file) + ".png", true);
+                }             
             }
         }
 
@@ -653,24 +668,34 @@ namespace DarkSoulsAssetRandomizer
             {
                 string fileName = Path.GetFileName(file);
 
-                if (!randomizeUiTextures && uiTextures.Contains(Path.GetFileName(file)))
+                //Dont randomize ui files if option is not selected
+                if (!randomizeUiTextures && uiTextures.Contains(fileName))
                 {
                     File.Copy(file, textureOutputFolder + fileName, true);
                 }
-                if (textureFileExtensionsToReplace.Any(fileName.EndsWith))
+                else if (textureFileExtensionsToReplace.Any(fileName.EndsWith))
                 {
-                    string replacingFile = replacingFiles[r.Next(replacingFiles.Length)];
-                    //copy random file to folder
-                    File.Copy(replacingFile, textureOutputFolder + fileName, true);
+                    //get a random file to replace with
+                    string replacingFile = replacingFiles[r.Next(replacingFiles.Length)];                    
+
+                    //dont change file extension if dds, otherwise change to png so dsfix can use it 
+                    if (Path.GetExtension(file) == ".dds")
+                    {
+                        File.Copy(file, textureOutputFolder + fileName, true);
+                    }
+                    else
+                    {
+                        File.Copy(file, textureOutputFolder + Path.GetFileNameWithoutExtension(file) + ".png", true);
+                    }
                 }
                 else
                 {
                     File.Copy(file, textureOutputFolder + fileName, true);
                 }
-            }
+                Console.WriteLine("Completed file " + counter + " of " + Directory.GetFiles(textureInputFolder + "Textures/").Count());
+                counter++;
 
-            Console.WriteLine("Completed file " + counter + " of " + Directory.GetFiles(textureInputFolder + "Textures/").Count());
-            counter++;
+            }            
         }
 
     }
