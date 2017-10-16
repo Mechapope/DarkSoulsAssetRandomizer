@@ -102,7 +102,7 @@ namespace DarkSoulsAssetRandomizer
             }
             else if (selection == "4")
             {
-                EmptyTempFolders(true, false);
+                EmptyTempFolders(false, false);
                 FixMainSoundFile();
             }
             else if (selection == "5")
@@ -136,7 +136,7 @@ namespace DarkSoulsAssetRandomizer
             }
             catch { }
 
-            //Add some empty lines so the complete message stands out more
+            //Write some empty lines so the complete message stands out more
             Console.WriteLine();
             Console.WriteLine();
             Console.WriteLine("Randomizing complete!");
@@ -149,50 +149,45 @@ namespace DarkSoulsAssetRandomizer
 
             try
             {
-                if (clearSoundFolders)
+                //Delete and recreate output folders
+                if (clearSoundFolders && Directory.Exists(soundOutputFolder))
                 {
+                    Directory.Delete(soundOutputFolder, true);
+                }
 
-                    if (Directory.Exists(soundTempFolder))
-                    {
-                        Directory.Delete(soundTempFolder, true);
-                    }
+                if (!Directory.Exists(soundOutputFolder))
+                {
+                    Directory.CreateDirectory(soundOutputFolder);
+                }
 
-                    if (Directory.Exists(soundOutputFolder))
-                    {
-                        Directory.Delete(soundOutputFolder, true);
-                    }
+                if (clearTextureFolders && Directory.Exists(textureOutputFolder))
+                {
+                    Directory.Delete(textureOutputFolder, true);
+                }
 
-                    if (!Directory.Exists(soundOutputFolder))
-                    {
-                        Directory.CreateDirectory(soundOutputFolder);
-                    }
+                if (!Directory.Exists(textureOutputFolder))
+                {
+                    Directory.CreateDirectory(textureOutputFolder);
+                }
 
-                    //clear sound inserter input folder, can cause problems if it stalls and doesnt clear itself
-                    foreach (var item in Directory.GetFiles(soundModInputFolderPath))
+                //clear sound inserter input folder, can cause problems if it stalls and doesnt clear itself
+                foreach (var item in Directory.GetFiles(soundModInputFolderPath))
+                {
+                    if (item != "fsblist.lst")
                     {
-                        if (item != "fsblist.lst")
-                        {
-                            File.Delete(item);
-                        }
+                        File.Delete(item);
                     }
                 }
 
-                if (clearTextureFolders)
+                //Delete temp folders
+                if (Directory.Exists(soundTempFolder))
                 {
-                    if (Directory.Exists(textureTempFolder))
-                    {
-                        Directory.Delete(textureTempFolder, true);
-                    }
+                    Directory.Delete(soundTempFolder, true);
+                }
 
-                    if (Directory.Exists(textureOutputFolder))
-                    {
-                        Directory.Delete(textureOutputFolder, true);
-                    }
-
-                    if (!Directory.Exists(textureOutputFolder))
-                    {
-                        Directory.CreateDirectory(textureOutputFolder);
-                    }
+                if (Directory.Exists(textureTempFolder))
+                {
+                    Directory.Delete(textureTempFolder, true);
                 }
             }
             catch
@@ -439,6 +434,7 @@ namespace DarkSoulsAssetRandomizer
             if (File.Exists(mainSoundFileOutputLocation))
             {
                 long mainFileSize = new FileInfo(mainSoundFileOutputLocation).Length;
+                //Check if file size is good
                 if (mainFileSize > minMainSoundFileSize && mainFileSize < maxMainSoundFileSize)
                 {
                     isMainFileValid = true;
@@ -481,6 +477,8 @@ namespace DarkSoulsAssetRandomizer
                     }
                 }
 
+                Random r = new Random();
+
                 foreach (var file in Directory.GetFiles(mainSoundFileInputLocation))
                 {
                     string fileName = Path.GetFileName(file);
@@ -489,7 +487,6 @@ namespace DarkSoulsAssetRandomizer
                     if (soundFileExtensionsToReplace.Any(fileName.EndsWith) && !fileName.Contains("blank"))
                     {
                         //Pick a random sound file name of the right size and copy
-                        Random r = new Random();
                         int i = r.Next(soundSmallFiles.Count);
 
                         File.Copy(soundInputFolder + soundSmallFiles[i], soundModInputFolderPath + fileName, true);
@@ -741,10 +738,8 @@ namespace DarkSoulsAssetRandomizer
                         File.Copy(file, file.Replace(soundModOutputFolderPath, soundOutputFolder), true);
                         File.Delete(file);
                     }
-
                 }
             }
-
         }
 
         static void ReplaceAllTexturesWithExtra(bool randomizeUiTextures)
