@@ -84,35 +84,35 @@ namespace DarkSoulsAssetRandomizer
 
             if (selection == "1")
             {
-                EmptyTempFolders();
+                EmptyTempFolders(true, true);
                 RandomizeSound();
                 FixMainSoundFile();
                 RandomizeTextures(randomizeUiTextures);
             }
             else if (selection == "2")
             {
-                EmptyTempFolders();
+                EmptyTempFolders(true, false);
                 RandomizeSound();
                 FixMainSoundFile();
             }
             else if (selection == "3")
             {
-                EmptyTempFolders();
+                EmptyTempFolders(false, true);
                 RandomizeTextures(randomizeUiTextures);
             }
             else if (selection == "4")
             {
-                EmptyTempFolders();
+                EmptyTempFolders(true, false);
                 FixMainSoundFile();
             }
             else if (selection == "5")
             {
-                EmptyTempFolders();
+                EmptyTempFolders(true, false);
                 ReplaceAllSoundsWithExtra();
             }
             else if (selection == "6")
             {
-                EmptyTempFolders();
+                EmptyTempFolders(false, true);
                 ReplaceAllTexturesWithExtra(randomizeUiTextures);
             }
             else
@@ -143,48 +143,55 @@ namespace DarkSoulsAssetRandomizer
             Console.ReadLine();
         }
 
-        static void EmptyTempFolders()
+        static void EmptyTempFolders(bool clearSoundFolders, bool clearTextureFolders)
         {
             Console.WriteLine("Clearing Output folders.");
 
             try
             {
-                if (Directory.Exists(soundTempFolder))
+                if (clearSoundFolders)
                 {
-                    Directory.Delete(soundTempFolder, true);
-                }
 
-                if (Directory.Exists(soundOutputFolder))
-                {
-                    Directory.Delete(soundOutputFolder, true);
-                }
-
-                if (Directory.Exists(textureTempFolder))
-                {
-                    Directory.Delete(textureTempFolder, true);
-                }
-
-                if (Directory.Exists(textureOutputFolder))
-                {
-                    Directory.Delete(textureOutputFolder, true);
-                }
-
-                if (!Directory.Exists(soundOutputFolder))
-                {
-                    Directory.CreateDirectory(soundOutputFolder);
-                }
-
-                if (!Directory.Exists(textureOutputFolder))
-                {
-                    Directory.CreateDirectory(textureOutputFolder);
-                }
-
-                //clear sound inserter input folder, can cause problems if it stalls and doesnt clear itself
-                foreach (var item in Directory.GetFiles(soundModInputFolderPath))
-                {
-                    if (item != "fsblist.lst")
+                    if (Directory.Exists(soundTempFolder))
                     {
-                        File.Delete(item);
+                        Directory.Delete(soundTempFolder, true);
+                    }
+
+                    if (Directory.Exists(soundOutputFolder))
+                    {
+                        Directory.Delete(soundOutputFolder, true);
+                    }
+
+                    if (!Directory.Exists(soundOutputFolder))
+                    {
+                        Directory.CreateDirectory(soundOutputFolder);
+                    }
+
+                    //clear sound inserter input folder, can cause problems if it stalls and doesnt clear itself
+                    foreach (var item in Directory.GetFiles(soundModInputFolderPath))
+                    {
+                        if (item != "fsblist.lst")
+                        {
+                            File.Delete(item);
+                        }
+                    }
+                }
+
+                if (clearTextureFolders)
+                {
+                    if (Directory.Exists(textureTempFolder))
+                    {
+                        Directory.Delete(textureTempFolder, true);
+                    }
+
+                    if (Directory.Exists(textureOutputFolder))
+                    {
+                        Directory.Delete(textureOutputFolder, true);
+                    }
+
+                    if (!Directory.Exists(textureOutputFolder))
+                    {
+                        Directory.CreateDirectory(textureOutputFolder);
                     }
                 }
             }
