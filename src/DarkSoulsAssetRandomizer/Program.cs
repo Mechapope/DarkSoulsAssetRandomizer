@@ -764,13 +764,13 @@ namespace DarkSoulsAssetRandomizer
                     string replacingFile = replacingFiles[r.Next(replacingFiles.Length)];                    
 
                     //dont change file extension if dds, otherwise change to png so dsfix can use it 
-                    if (Path.GetExtension(file) == ".dds")
+                    if (Path.GetExtension(replacingFile) == ".dds")
                     {
-                        File.Copy(file, textureOutputFolder + fileName, true);
+                        File.Copy(replacingFile, textureOutputFolder + fileName, true);
                     }
                     else
                     {
-                        File.Copy(file, textureOutputFolder + Path.GetFileNameWithoutExtension(file) + ".png", true);
+                        File.Copy(replacingFile, textureOutputFolder + Path.GetFileNameWithoutExtension(file) + ".png", true);
                     }
                 }
                 else
