@@ -16,8 +16,8 @@ Instructions:
 * Unpack your installation of Dark Souls.
 * If you want to include your own sounds or textures in the randomizer, add your textures to the '/DarkSoulsAssetRandomizer/AssetRandomizerFiles/Textures/Input/_Extra' and your sounds to the '/DarkSoulsAssetRandomizer/AssetRandomizerFiles/Sounds/Input/_Extra' folder.
 * Unpacked sounds and textures can't be included in this repo due to size constraints, but a copy with these files can be found [here](https://drive.google.com/file/d/0B5Z4vOoakC78TkliRi15NWFpcVk/view?usp=sharing).
-* Run the DarkSoulsAssetRandomizer.exe. This may take a while to complete. Nothing I can do, sorry ¯\_(ツ)_/¯
-* When the tool has finished, copy the .bnd files from /AssetRandomizerFiles/Sounds/Output/ to the sound folder in your Dark Souls/DATA folder.
+* Run the DarkSoulsAssetRandomizer.exe. The sound randomizing will take a long ass time. Nothing I can do, sorry ¯\_(ツ)_/¯
+* When the tool has finished, copy the .bnd files from /AssetRandomizerFiles/Sounds/Output/ to your Dark Souls/DATA/sound folder.
 * Copy the textures from /AssetRandomizerFiles/Textures/Output/ to your DSfix tex_override folder.
 
 Complete!

@@ -19,6 +19,7 @@ namespace DarkSoulsAssetRandomizer
         static string soundOutputFolder = baseDirectory + "/AssetRandomizerFiles/Sounds/Output/";
         static int soundSmallFileThreshold = 70000;
         static int soundMediumFileThreshold = 700000;
+
         //sounds need to be seperated by size or game can refuse to load
         static List<string> soundSmallFiles = new List<string>();
         static List<string> soundMediumFiles = new List<string>();
@@ -68,6 +69,7 @@ namespace DarkSoulsAssetRandomizer
             Console.WriteLine("4 - Redo Main Sound File (troubleshooting)");
             Console.WriteLine("5 - Use Extra files for ALL sounds");
             Console.WriteLine("6 - Use Extra files for ALL textures");
+
             string selection = Console.ReadLine();
 
             bool randomizeUiTextures = false;
@@ -80,44 +82,39 @@ namespace DarkSoulsAssetRandomizer
                 {
                     randomizeUiTextures = true;
                 }
-            }           
+            }
 
-            if (selection == "1")
+            switch(selection)
             {
-                EmptyTempFolders(true, true);
-                RandomizeSound();
-                FixMainSoundFile();
-                RandomizeTextures(randomizeUiTextures);
-            }
-            else if (selection == "2")
-            {
-                EmptyTempFolders(true, false);
-                RandomizeSound();
-                FixMainSoundFile();
-            }
-            else if (selection == "3")
-            {
-                EmptyTempFolders(false, true);
-                RandomizeTextures(randomizeUiTextures);
-            }
-            else if (selection == "4")
-            {
-                EmptyTempFolders(false, false);
-                FixMainSoundFile();
-            }
-            else if (selection == "5")
-            {
-                EmptyTempFolders(true, false);
-                ReplaceAllSoundsWithExtra();
-            }
-            else if (selection == "6")
-            {
-                EmptyTempFolders(false, true);
-                ReplaceAllTexturesWithExtra(randomizeUiTextures);
-            }
-            else
-            {
-                return;
+                case "1":
+                    EmptyTempFolders(true, true);
+                    RandomizeSound();
+                    FixMainSoundFile();
+                    RandomizeTextures(randomizeUiTextures);
+                    break;
+                case "2":
+                    EmptyTempFolders(true, false);
+                    RandomizeSound();
+                    FixMainSoundFile();
+                    break;
+                case "3":
+                    EmptyTempFolders(false, true);
+                    RandomizeTextures(randomizeUiTextures);
+                    break;
+                case "4":
+                    EmptyTempFolders(false, false);
+                    FixMainSoundFile();
+                    break;
+                case "5":
+                    EmptyTempFolders(true, false);
+                    ReplaceAllSoundsWithExtra();
+                    break;
+                case "6":
+                    EmptyTempFolders(false, true);
+                    ReplaceAllTexturesWithExtra(randomizeUiTextures);
+                    break;
+                default:
+                    return;
             }
 
             //cleanup
@@ -136,10 +133,7 @@ namespace DarkSoulsAssetRandomizer
             }
             catch { }
 
-            //Write some empty lines so the complete message stands out more
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine("Randomizing complete!");
+            Console.WriteLine("\n\n\nRandomizing complete!");
             Console.ReadLine();
         }
 
@@ -203,10 +197,10 @@ namespace DarkSoulsAssetRandomizer
         {
             Console.WriteLine("Looking at sound files.");
 
-            //Check that sound folders exist in case people are using the download that doesnt come with sound files
+            //Check that sound folders exist in case people are using the github download with no sound files
             if (Directory.GetDirectories(soundInputFolder).Count() == 0)
             {
-                Console.WriteLine("No sound files detected! Did you download the file directly from GitHub? Check the instructions on GitHub for the download that contains the sound files.");
+                Console.WriteLine("No sound files detected! Did you download the file directly from GitHub? Check the read me on GitHub for the download link that contains the sound files.");
                 Console.ReadLine();
                 return;
             }
@@ -292,7 +286,7 @@ namespace DarkSoulsAssetRandomizer
                 }
             }
 
-            //Delete the _extra folder from temp directory, as it will cause errors in the batch file and it isn't needed anymore anyways
+            //Delete the _extra folder from temp directory, as it isn't needed anymore
             if (Directory.Exists(soundTempFolder + "_Extra"))
             {
                 Directory.Delete(soundTempFolder + "_Extra", true);
